@@ -44,18 +44,18 @@ const RadixTree = struct {
             }
             // case: the new seq is a parent of the current node.
             if (i == seq.len) {
+                std.mem.copyForwards(u8, self.seq, self.seq[i..]);
+                self.seq = try allocator.realloc(self.seq, self.seq.len - i);
                 var prev = self.*;
-                std.mem.copyForwards(u8, prev.seq, prev.seq[i..]);
-                prev.seq = try allocator.realloc(prev.seq, prev.seq.len - i);
                 self.* = try Node.init(allocator, seq, value);
                 errdefer prev.deinit(allocator);
                 try self.children.put(prev.seq[0], prev);
                 return;
             }
             // case: the current node and the new seq share a common parent.
-            var prev = self.*;
-            std.mem.copyForwards(u8, prev.seq, prev.seq[i..]);
-            prev.seq = try allocator.realloc(prev.seq, prev.seq.len - i);
+            std.mem.copyForwards(u8, self.seq, self.seq[i..]);
+            self.seq = try allocator.realloc(self.seq, self.seq.len - i);
+            const prev = self.*;
             var new = try Node.init(allocator, seq[i..], value);
             errdefer new.deinit(allocator);
             self.* = try Node.init(allocator, seq[0..i], null);
