@@ -365,3 +365,32 @@ test "RadixTree.lookup: 2" {
     try testing.expectEqual(1, tree.lookup("foo"));
     try testing.expectEqual(2, tree.lookup("f"));
 }
+
+test "RadixTree.fuzz" {
+    const global = struct {
+        fn testOne(input: []const u8) anyerror!void {
+            // we treat first 2 bytes as 8 bit numbers.
+            // we use these two numbers to split the rest of the input.
+            if (input.len < 2) {
+                return;
+            }
+            const len1: usize = @intCast(input[0]);
+            const len2: usize = @intCast(input[1]);
+            if (input.len < 2 + len1 + len2) {
+                return;
+            }
+            var tree = RadixTree.init(testing.allocator);
+            defer tree.deinit();
+
+            try tree.insert("foo", 0);
+            try tree.insert("bar", 0);
+            try tree.insert("foobar", 0);
+            try tree.insert("f", 0);
+
+            try tree.insert(input[2 .. len1 + 2], 0);
+            try tree.insert(input[2 + len1 .. 2 + len1 + len2], 0);
+            try tree.remove(input[2 + len1 + len2 ..]);
+        }
+    };
+    try std.testing.fuzz(global.testOne, .{});
+}
