@@ -44,4 +44,15 @@ pub fn build(b: *std.Build) void {
     // running the unit tests.
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_lib_unit_tests.step);
+
+    // This creates a check command that is used by the LSP
+    const lib_check = b.addStaticLibrary(.{
+        .name = "check",
+        .root_source_file = b.path("src/root.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+
+    const check = b.step("check", "Check if root compiles");
+    check.dependOn(&lib_check.step);
 }
