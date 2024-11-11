@@ -42,11 +42,7 @@ const RadixTree = struct {
                     var prev = self.*;
                     std.mem.copyForwards(u8, prev.seq, prev.seq[i..]);
                     prev.seq = try allocator.realloc(prev.seq, prev.seq.len - i);
-                    self.* = .{
-                        .seq = try allocator.dupe(u8, seq),
-                        .value = value,
-                        .children = ChildrenMap.init(allocator),
-                    };
+                    self.* = try Node.init(allocator, seq, value);
                     errdefer prev.deinit(allocator);
                     try self.children.put(seq[i - 1], prev);
                     return;
