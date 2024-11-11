@@ -324,9 +324,6 @@ test "RadixTree.remove: 3" {
 }
 
 test "RadixTree.remove: 4" {
-    if (true) {
-        return error.SkipZigTest;
-    }
     var tree = RadixTree.init(testing.allocator);
     defer tree.deinit();
     try tree.insert("foo", 1);
