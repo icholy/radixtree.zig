@@ -99,18 +99,18 @@ const RadixTree = struct {
             }
             if (self.seq.len == seq.len) {
                 self.value = null;
-                try self.compress(allocator);
-                return;
-            }
-            const sub_seq = seq[self.seq.len..];
-            if (self.children.getPtr(sub_seq[0])) |node| {
-                try node.remove(allocator, sub_seq);
-                if (node.empty()) {
-                    node.deinit(allocator);
-                    const ok = self.children.remove(sub_seq[0]);
-                    std.debug.assert(ok);
+            } else {
+                const sub_seq = seq[self.seq.len..];
+                if (self.children.getPtr(sub_seq[0])) |node| {
+                    try node.remove(allocator, sub_seq);
+                    if (node.empty()) {
+                        node.deinit(allocator);
+                        const ok = self.children.remove(sub_seq[0]);
+                        std.debug.assert(ok);
+                    }
                 }
             }
+            try self.compress(allocator);
         }
 
         fn compress(self: *Node, allocator: std.mem.Allocator) !void {
