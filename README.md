@@ -1,3 +1,3 @@
-# WIP: RADIX TREE
+# RADIX TREE
 
 > Zig implementaion of a radix tree.

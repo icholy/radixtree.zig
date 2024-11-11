@@ -92,16 +92,18 @@ const RadixTree = struct {
             return self.value == null and self.children.count() == 0;
         }
 
-        fn remove(self: *Node, allocator: std.mem.Allocator, seq: []const u8) !void {
+        fn remove(self: *Node, allocator: std.mem.Allocator, seq: []const u8) !?i64 {
+            var value: ?i64 = null;
             if (!std.mem.startsWith(u8, seq, self.seq)) {
-                return;
+                return null;
             }
             if (self.seq.len == seq.len) {
+                value = self.value;
                 self.value = null;
             } else {
                 const sub_seq = seq[self.seq.len..];
                 if (self.children.getPtr(sub_seq[0])) |node| {
-                    try node.remove(allocator, sub_seq);
+                    value = try node.remove(allocator, sub_seq);
                     if (node.empty()) {
                         node.deinit(allocator);
                         const ok = self.children.remove(sub_seq[0]);
@@ -110,6 +112,7 @@ const RadixTree = struct {
                 }
             }
             try self.compress(allocator);
+            return value;
         }
 
         fn compress(self: *Node, allocator: std.mem.Allocator) !void {
@@ -183,17 +186,19 @@ const RadixTree = struct {
         }
     }
 
-    fn remove(self: *RadixTree, seq: []const u8) !void {
+    fn remove(self: *RadixTree, seq: []const u8) !?i64 {
         if (seq.len == 0) {
-            return;
+            return null;
         }
         if (self.root) |*node| {
-            try node.remove(self.allocator, seq);
+            const value = try node.remove(self.allocator, seq);
             if (node.empty()) {
                 node.deinit(self.allocator);
                 self.root = null;
             }
+            return value;
         }
+        return null;
     }
 
     fn lookup(self: *RadixTree, seq: []const u8) ?i64 {
@@ -307,7 +312,7 @@ test "RadixTree.remove: 1" {
     var tree = RadixTree.init(testing.allocator);
     defer tree.deinit();
     try tree.insert("foo", 1);
-    try tree.remove("foo");
+    _ = try tree.remove("foo");
     try expectTreeEqual(&tree, "");
 }
 
@@ -316,7 +321,7 @@ test "RadixTree.remove: 2" {
     defer tree.deinit();
     try tree.insert("foo", 1);
     try tree.insert("bar", 2);
-    try tree.remove("foo");
+    _ = try tree.remove("foo");
     const expected =
         \\bar - 2
         \\
@@ -329,7 +334,7 @@ test "RadixTree.remove: 3" {
     defer tree.deinit();
     try tree.insert("foo", 1);
     try tree.insert("foobar", 2);
-    try tree.remove("foobar");
+    _ = try tree.remove("foobar");
     const expected =
         \\foo - 1
         \\
@@ -342,7 +347,7 @@ test "RadixTree.remove: 4" {
     defer tree.deinit();
     try tree.insert("foo", 1);
     try tree.insert("f", 2);
-    try tree.remove("f");
+    _ = try tree.remove("f");
     const expected =
         \\foo - 1
         \\
@@ -389,7 +394,7 @@ test "RadixTree.fuzz" {
 
             try tree.insert(input[2 .. len1 + 2], 0);
             try tree.insert(input[2 + len1 .. 2 + len1 + len2], 0);
-            try tree.remove(input[2 + len1 + len2 ..]);
+            _ = try tree.remove(input[2 + len1 + len2 ..]);
         }
     };
     try std.testing.fuzz(global.testOne, .{});
