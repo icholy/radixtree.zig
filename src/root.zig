@@ -14,6 +14,14 @@ const RadixTree = struct {
         children: ChildrenMap,
         value: ?i64 = null,
 
+        fn init(allocator: std.mem.Allocator, seq: []const u8, value: ?i64) !Node {
+            return .{
+                .seq = try allocator.dupe(u8, seq),
+                .children = ChildrenMap.init(allocator),
+                .value = value,
+            };
+        }
+
         fn deinit(self: *Node, allocator: std.mem.Allocator) void {
             var it = self.children.valueIterator();
             while (it.next()) |node| {
@@ -46,16 +54,9 @@ const RadixTree = struct {
                 var prev = self.*;
                 std.mem.copyForwards(u8, prev.seq, prev.seq[i..]);
                 prev.seq = try allocator.realloc(prev.seq, prev.seq.len - i);
-                var new = Node{
-                    .seq = try allocator.dupe(u8, seq[i..]),
-                    .value = value,
-                    .children = ChildrenMap.init(allocator),
-                };
+                var new = try Node.init(allocator, seq[i..], value);
                 errdefer new.deinit(allocator);
-                self.* = .{
-                    .seq = try allocator.dupe(u8, seq[0..i]),
-                    .children = ChildrenMap.init(allocator),
-                };
+                self.* = try Node.init(allocator, seq[0..i], null);
                 try self.children.put(new.seq[0], new);
                 try self.children.put(prev.seq[0], prev);
             } else {
@@ -67,11 +68,7 @@ const RadixTree = struct {
             if (self.children.getPtr(seq[0])) |node| {
                 try node.insert(allocator, seq, value);
             } else {
-                var node = Node{
-                    .seq = try allocator.dupe(u8, seq),
-                    .value = value,
-                    .children = ChildrenMap.init(allocator),
-                };
+                var node = try Node.init(allocator, seq, value);
                 errdefer node.deinit(allocator);
                 try self.children.put(seq[0], node);
             }
