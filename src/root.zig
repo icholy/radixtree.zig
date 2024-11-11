@@ -190,76 +190,76 @@ test "RadixTree: 1" {
     try expectTreeEqual(&tree, expected);
 }
 
-// test "RadixTree: 2" {
-//     var tree = RadixTree.init(testing.allocator);
-//     defer tree.deinit();
-//     try tree.insert("foo", 1);
-//     try tree.insert("bar", 2);
-//     const expected =
-//         \\bar - 2
-//         \\foo - 1
-//         \\
-//     ;
-//     try expectTreeEqual(&tree, expected);
-// }
-//
-// test "RadixTree: 3" {
-//     var tree = RadixTree.init(testing.allocator);
-//     defer tree.deinit();
-//     try tree.insert("foobar", 1);
-//     try tree.insert("foo", 2);
-//     const expected =
-//         \\foo - 2
-//         \\ bar - 1
-//         \\
-//     ;
-//     try expectTreeEqual(&tree, expected);
-// }
-//
-// test "RadixTree: 4" {
-//     var tree = RadixTree.init(testing.allocator);
-//     defer tree.deinit();
-//     try tree.insert("foobar", 1);
-//     try tree.insert("foopoo", 2);
-//     const expected =
-//         \\foo
-//         \\ bar - 1
-//         \\ poo - 2
-//         \\
-//     ;
-//     try expectTreeEqual(&tree, expected);
-// }
-//
-// test "RadixTree: 5" {
-//     var tree = RadixTree.init(testing.allocator);
-//     defer tree.deinit();
-//     try tree.insert("foobar", 1);
-//     try tree.insert("foopoo", 2);
-//     try tree.insert("f", 3);
-//     const expected =
-//         \\f - 3
-//         \\ oo
-//         \\  bar - 1
-//         \\  poo - 2
-//         \\
-//     ;
-//     try expectTreeEqual(&tree, expected);
-// }
-//
-// test "RadixTree: 6" {
-//     var tree = RadixTree.init(testing.allocator);
-//     defer tree.deinit();
-//     try tree.insert("foobar", 1);
-//     try tree.insert("f", 2);
-//     try tree.insert("f", 3);
-//     const expected =
-//         \\f - 3
-//         \\ oobar - 1
-//         \\
-//     ;
-//     try expectTreeEqual(&tree, expected);
-// }
-//
+test "RadixTree: 2" {
+    var tree = RadixTree.init(testing.allocator);
+    defer tree.deinit();
+    try tree.insert("foo", 1);
+    try tree.insert("bar", 2);
+    const expected =
+        \\bar - 2
+        \\foo - 1
+        \\
+    ;
+    try expectTreeEqual(&tree, expected);
+}
+
+test "RadixTree: 3" {
+    var tree = RadixTree.init(testing.allocator);
+    defer tree.deinit();
+    try tree.insert("foobar", 1);
+    try tree.insert("foo", 2);
+    const expected =
+        \\foo - 2
+        \\ bar - 1
+        \\
+    ;
+    try expectTreeEqual(&tree, expected);
+}
+
+test "RadixTree: 4" {
+    var tree = RadixTree.init(testing.allocator);
+    defer tree.deinit();
+    try tree.insert("foobar", 1);
+    try tree.insert("foopoo", 2);
+    const expected =
+        \\foo
+        \\ bar - 1
+        \\ poo - 2
+        \\
+    ;
+    try expectTreeEqual(&tree, expected);
+}
+
+test "RadixTree: 5" {
+    var tree = RadixTree.init(testing.allocator);
+    defer tree.deinit();
+    try tree.insert("foobar", 1);
+    try tree.insert("foopoo", 2);
+    try tree.insert("f", 3);
+    const expected =
+        \\f - 3
+        \\ oo
+        \\  bar - 1
+        \\  poo - 2
+        \\
+    ;
+    try expectTreeEqual(&tree, expected);
+}
+
+test "RadixTree: 6" {
+    var tree = RadixTree.init(testing.allocator);
+    defer tree.deinit();
+    try tree.insert("foobar", 1);
+    try tree.insert("f", 2);
+    try tree.insert("f", 3);
+    const expected =
+        \\f - 3
+        \\ oobar - 1
+        \\
+    ;
+    try expectTreeEqual(&tree, expected);
+}
+
 // test "RadixTree: 7" {
 //     var tree = RadixTree.init(testing.allocator);
 //     defer tree.deinit();
