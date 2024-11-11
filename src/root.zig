@@ -351,5 +351,6 @@ test "RadixTree.lookup: 2" {
     defer tree.deinit();
     try tree.insert("foo", 1);
     try tree.insert("f", 2);
+    try testing.expectEqual(1, tree.lookup("foo"));
     try testing.expectEqual(2, tree.lookup("f"));
 }
