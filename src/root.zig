@@ -346,3 +346,12 @@ test "RadixTree.lookup: 1" {
     const value = tree.lookup("foo");
     try testing.expectEqual(1, value);
 }
+
+test "RadixTree.lookup: 2" {
+    var tree = RadixTree.init(testing.allocator);
+    defer tree.deinit();
+    try tree.insert("foo", 1);
+    try tree.insert("f", 2);
+    const value = tree.lookup("f");
+    try testing.expectEqual(2, value);
+}
