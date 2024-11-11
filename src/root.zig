@@ -89,37 +89,45 @@ const RadixTree = struct {
             return null;
         }
 
-        fn remove(self: *Node, allocator: std.mem.Allocator, seq: []const u8) !bool {
+        fn empty(self: *Node) bool {
+            return self.value == null and self.children.count() == 0;
+        }
+
+        fn remove(self: *Node, allocator: std.mem.Allocator, seq: []const u8) !void {
             if (!std.mem.startsWith(u8, seq, self.seq)) {
-                return false;
+                return;
             }
             if (self.seq.len == seq.len) {
-                switch (self.children.count()) {
-                    0 => return true,
-                    1 => {
-                        var it = self.children.valueIterator();
-                        const child = it.next().?.*;
-                        const ok = self.children.remove(child.seq[0]);
-                        std.debug.assert(ok);
-                        self.deinit(allocator);
-                        self.* = child;
-                        return false;
-                    },
-                    else => {
-                        self.value = null;
-                        return false;
-                    },
-                }
+                self.value = null;
+                try self.compress(allocator);
+                return;
             }
             const sub_seq = seq[self.seq.len..];
             if (self.children.getPtr(sub_seq[0])) |node| {
-                const empty = try node.remove(allocator, sub_seq);
-                if (empty) {
+                try node.remove(allocator, sub_seq);
+                if (node.empty()) {
                     node.deinit(allocator);
-                    _ = self.children.remove(sub_seq[0]);
+                    const ok = self.children.remove(sub_seq[0]);
+                    std.debug.assert(ok);
                 }
             }
-            return false;
+        }
+
+        fn compress(self: *Node, allocator: std.mem.Allocator) !void {
+            if (self.children.count() != 1 or self.value != null) return;
+            // detach the only child
+            var it = self.children.valueIterator();
+            var child = it.next().?.*;
+            const ok = self.children.remove(child.seq[0]);
+            std.debug.assert(ok);
+            errdefer child.deinit(allocator);
+            // prefix the child's seq with ours
+            child.seq = try allocator.realloc(child.seq, self.seq.len + child.seq.len);
+            std.mem.copyBackwards(u8, child.seq[self.seq.len - 1 ..], child.seq);
+            std.mem.copyForwards(u8, child.seq, self.seq);
+            // replace ourselves with the child
+            self.deinit(allocator);
+            self.* = child;
         }
 
         fn write(self: *Node, w: std.io.AnyWriter, indent: usize) !void {
@@ -176,8 +184,8 @@ const RadixTree = struct {
             return;
         }
         if (self.root) |*node| {
-            const empty = try node.remove(self.allocator, seq);
-            if (empty) {
+            try node.remove(self.allocator, seq);
+            if (node.empty()) {
                 node.deinit(self.allocator);
                 self.root = null;
             }
