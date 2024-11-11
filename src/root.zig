@@ -74,6 +74,12 @@ const RadixTree = struct {
             }
         }
 
+        fn lookup(self: *Node, seq: []const u8) ?i64 {
+            _ = self;
+            _ = seq;
+            return null;
+        }
+
         fn remove(self: *Node, allocator: std.mem.Allocator, seq: []const u8) !bool {
             if (!std.mem.startsWith(u8, seq, self.seq)) {
                 return false;
@@ -170,8 +176,9 @@ const RadixTree = struct {
     }
 
     fn lookup(self: *RadixTree, seq: []const u8) ?i64 {
-        _ = self;
-        _ = seq;
+        if (self.root) |*node| {
+            return node.lookup(seq);
+        }
         return null;
     }
 };
