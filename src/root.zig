@@ -249,3 +249,16 @@ test "RadixTree: 7" {
     ;
     try expectTreeEqual(&tree, expected);
 }
+
+test "RadixTree: 8" {
+    var tree = RadixTree.init(testing.allocator);
+    defer tree.deinit();
+    try tree.insert("foo", 1);
+    try tree.insert("f", 2);
+    try tree.remove("f");
+    const expected =
+        \\foo - 1
+        \\
+    ;
+    try expectTreeEqual(&tree, expected);
+}
