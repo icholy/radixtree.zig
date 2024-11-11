@@ -168,6 +168,12 @@ const RadixTree = struct {
             }
         }
     }
+
+    fn lookup(self: *RadixTree, seq: []const u8) ?i64 {
+        _ = self;
+        _ = seq;
+        return null;
+    }
 };
 
 fn expectTreeEqual(tree: *RadixTree, expected: []const u8) !void {
@@ -177,14 +183,14 @@ fn expectTreeEqual(tree: *RadixTree, expected: []const u8) !void {
     try testing.expectEqualStrings(expected, output.items);
 }
 
-test "RadixTree: 0" {
+test "RadixTree.init: 0" {
     var tree = RadixTree.init(testing.allocator);
     defer tree.deinit();
     const expected = "";
     try expectTreeEqual(&tree, expected);
 }
 
-test "RadixTree: 1" {
+test "RadixTree.insert: 1" {
     var tree = RadixTree.init(testing.allocator);
     defer tree.deinit();
     try tree.insert("foo", 1);
@@ -197,7 +203,7 @@ test "RadixTree: 1" {
     try expectTreeEqual(&tree, expected);
 }
 
-test "RadixTree: 2" {
+test "RadixTree.insert: 2" {
     var tree = RadixTree.init(testing.allocator);
     defer tree.deinit();
     try tree.insert("foo", 1);
@@ -210,7 +216,7 @@ test "RadixTree: 2" {
     try expectTreeEqual(&tree, expected);
 }
 
-test "RadixTree: 3" {
+test "RadixTree.insert: 3" {
     var tree = RadixTree.init(testing.allocator);
     defer tree.deinit();
     try tree.insert("foobar", 1);
@@ -223,7 +229,7 @@ test "RadixTree: 3" {
     try expectTreeEqual(&tree, expected);
 }
 
-test "RadixTree: 4" {
+test "RadixTree.insert: 4" {
     var tree = RadixTree.init(testing.allocator);
     defer tree.deinit();
     try tree.insert("foobar", 1);
@@ -237,7 +243,7 @@ test "RadixTree: 4" {
     try expectTreeEqual(&tree, expected);
 }
 
-test "RadixTree: 5" {
+test "RadixTree.insert: 5" {
     var tree = RadixTree.init(testing.allocator);
     defer tree.deinit();
     try tree.insert("foobar", 1);
@@ -253,7 +259,7 @@ test "RadixTree: 5" {
     try expectTreeEqual(&tree, expected);
 }
 
-test "RadixTree: 6" {
+test "RadixTree.insert: 6" {
     var tree = RadixTree.init(testing.allocator);
     defer tree.deinit();
     try tree.insert("foobar", 1);
@@ -267,7 +273,7 @@ test "RadixTree: 6" {
     try expectTreeEqual(&tree, expected);
 }
 
-test "RadixTree: 7" {
+test "RadixTree.remove: 1" {
     var tree = RadixTree.init(testing.allocator);
     defer tree.deinit();
     try tree.insert("foo", 1);
@@ -275,7 +281,7 @@ test "RadixTree: 7" {
     try expectTreeEqual(&tree, "");
 }
 
-test "RadixTree: 8" {
+test "RadixTree.remove: 2" {
     var tree = RadixTree.init(testing.allocator);
     defer tree.deinit();
     try tree.insert("foo", 1);
@@ -288,7 +294,7 @@ test "RadixTree: 8" {
     try expectTreeEqual(&tree, expected);
 }
 
-test "RadixTree: 9" {
+test "RadixTree.remove: 3" {
     var tree = RadixTree.init(testing.allocator);
     defer tree.deinit();
     try tree.insert("foo", 1);
@@ -301,7 +307,7 @@ test "RadixTree: 9" {
     try expectTreeEqual(&tree, expected);
 }
 
-test "RadixTree: 10" {
+test "RadixTree.remove: 4" {
     if (true) {
         return error.SkipZigTest;
     }
@@ -315,4 +321,12 @@ test "RadixTree: 10" {
         \\
     ;
     try expectTreeEqual(&tree, expected);
+}
+
+test "RadixTree.lookup: 1" {
+    var tree = RadixTree.init(testing.allocator);
+    defer tree.deinit();
+    try tree.insert("foo", 1);
+    const value = tree.lookup("foo");
+    try testing.expectEqual(1, value);
 }
