@@ -135,6 +135,13 @@ fn expectTreeEqual(tree: *RadixTree, expected: []const u8) !void {
     try testing.expectEqualStrings(expected, output.items);
 }
 
+test "RadixTree: 0" {
+    var tree = RadixTree.init(testing.allocator);
+    defer tree.deinit();
+    const expected = "";
+    try expectTreeEqual(&tree, expected);
+}
+
 test "RadixTree: 1" {
     var tree = RadixTree.init(testing.allocator);
     defer tree.deinit();
