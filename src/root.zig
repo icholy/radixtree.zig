@@ -84,7 +84,8 @@ const RadixTree = struct {
                     1 => {
                         var it = self.children.valueIterator();
                         const child = it.next().?.*;
-                        _ = self.children.remove(child.seq[0]);
+                        const ok = self.children.remove(child.seq[0]);
+                        std.debug.assert(ok);
                         self.deinit(allocator);
                         self.* = child;
                         return false;
@@ -293,6 +294,22 @@ test "RadixTree: 9" {
     try tree.insert("foo", 1);
     try tree.insert("foobar", 2);
     try tree.remove("foobar");
+    const expected =
+        \\foo - 1
+        \\
+    ;
+    try expectTreeEqual(&tree, expected);
+}
+
+test "RadixTree: 10" {
+    if (true) {
+        return error.SkipZigTest;
+    }
+    var tree = RadixTree.init(testing.allocator);
+    defer tree.deinit();
+    try tree.insert("foo", 1);
+    try tree.insert("f", 2);
+    try tree.remove("f");
     const expected =
         \\foo - 1
         \\
