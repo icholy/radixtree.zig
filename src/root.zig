@@ -273,19 +273,19 @@ test "RadixTree: 7" {
     try tree.remove("foo");
     try expectTreeEqual(&tree, "");
 }
-//
-// test "RadixTree: 8" {
-//     var tree = RadixTree.init(testing.allocator);
-//     defer tree.deinit();
-//     try tree.insert("foo", 1);
-//     try tree.insert("bar", 2);
-//     try tree.remove("foo");
-//     const expected =
-//         \\bar - 2
-//         \\
-//     ;
-//     try expectTreeEqual(&tree, expected);
-// }
+
+test "RadixTree: 8" {
+    var tree = RadixTree.init(testing.allocator);
+    defer tree.deinit();
+    try tree.insert("foo", 1);
+    try tree.insert("bar", 2);
+    try tree.remove("foo");
+    const expected =
+        \\bar - 2
+        \\
+    ;
+    try expectTreeEqual(&tree, expected);
+}
 //
 // test "RadixTree: 9" {
 //     var tree = RadixTree.init(testing.allocator);
