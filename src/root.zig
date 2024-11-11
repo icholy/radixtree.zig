@@ -46,7 +46,7 @@ const RadixTree = struct {
                     prev.seq = try allocator.realloc(prev.seq, prev.seq.len - i);
                     self.* = try Node.init(allocator, seq, value);
                     errdefer prev.deinit(allocator);
-                    try self.children.put(seq[i - 1], prev);
+                    try self.children.put(prev.seq[0], prev);
                     return;
                 }
                 // case: the current node and the new seq share a common parent.
