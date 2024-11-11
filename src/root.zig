@@ -32,36 +32,35 @@ const RadixTree = struct {
         }
 
         fn insert(self: *Node, allocator: std.mem.Allocator, seq: []const u8, value: i64) InsertErrors!void {
-            const index = std.mem.indexOfDiff(u8, self.seq, seq);
-            if (index) |i| {
-                // case: the current node is a parent of the new seq.
-                if (i == self.seq.len) {
-                    try self.insertChild(allocator, seq[i..], value);
-                    return;
-                }
-                // case: the new seq is a parent of the current node.
-                if (i == seq.len) {
-                    var prev = self.*;
-                    std.mem.copyForwards(u8, prev.seq, prev.seq[i..]);
-                    prev.seq = try allocator.realloc(prev.seq, prev.seq.len - i);
-                    self.* = try Node.init(allocator, seq, value);
-                    errdefer prev.deinit(allocator);
-                    try self.children.put(prev.seq[0], prev);
-                    return;
-                }
-                // case: the current node and the new seq share a common parent.
+            const i = std.mem.indexOfDiff(u8, self.seq, seq) orelse {
+                // case: the new seq is the current node.
+                self.value = value;
+                return;
+            };
+            // case: the current node is a parent of the new seq.
+            if (i == self.seq.len) {
+                try self.insertChild(allocator, seq[i..], value);
+                return;
+            }
+            // case: the new seq is a parent of the current node.
+            if (i == seq.len) {
                 var prev = self.*;
                 std.mem.copyForwards(u8, prev.seq, prev.seq[i..]);
                 prev.seq = try allocator.realloc(prev.seq, prev.seq.len - i);
-                var new = try Node.init(allocator, seq[i..], value);
-                errdefer new.deinit(allocator);
-                self.* = try Node.init(allocator, seq[0..i], null);
-                try self.children.put(new.seq[0], new);
+                self.* = try Node.init(allocator, seq, value);
+                errdefer prev.deinit(allocator);
                 try self.children.put(prev.seq[0], prev);
-            } else {
-                // case: the new seq is the current node.
-                self.value = value;
+                return;
             }
+            // case: the current node and the new seq share a common parent.
+            var prev = self.*;
+            std.mem.copyForwards(u8, prev.seq, prev.seq[i..]);
+            prev.seq = try allocator.realloc(prev.seq, prev.seq.len - i);
+            var new = try Node.init(allocator, seq[i..], value);
+            errdefer new.deinit(allocator);
+            self.* = try Node.init(allocator, seq[0..i], null);
+            try self.children.put(new.seq[0], new);
+            try self.children.put(prev.seq[0], prev);
         }
 
         fn insertChild(self: *Node, allocator: std.mem.Allocator, seq: []const u8, value: i64) InsertErrors!void {
