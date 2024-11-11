@@ -159,7 +159,13 @@ const RadixTree = struct {
         if (seq.len == 0) {
             return;
         }
-        _ = try self.root.remove(self.allocator, seq);
+        if (self.root) |*node| {
+            const empty = try node.remove(self.allocator, seq);
+            if (empty) {
+                node.deinit(self.allocator);
+                self.root = null;
+            }
+        }
     }
 };
 
@@ -260,13 +266,13 @@ test "RadixTree: 6" {
     try expectTreeEqual(&tree, expected);
 }
 
-// test "RadixTree: 7" {
-//     var tree = RadixTree.init(testing.allocator);
-//     defer tree.deinit();
-//     try tree.insert("foo", 1);
-//     try tree.remove("foo");
-//     try expectTreeEqual(&tree, "");
-// }
+test "RadixTree: 7" {
+    var tree = RadixTree.init(testing.allocator);
+    defer tree.deinit();
+    try tree.insert("foo", 1);
+    try tree.remove("foo");
+    try expectTreeEqual(&tree, "");
+}
 //
 // test "RadixTree: 8" {
 //     var tree = RadixTree.init(testing.allocator);
