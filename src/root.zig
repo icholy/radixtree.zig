@@ -226,6 +226,14 @@ test "RadixTree: 6" {
 }
 
 test "RadixTree: 7" {
+    var tree = RadixTree.init(testing.allocator);
+    defer tree.deinit();
+    try tree.insert("foo", 1);
+    try tree.remove("foo");
+    try expectTreeEqual(&tree, "");
+}
+
+test "RadixTree: 8" {
     if (true) {
         return error.SkipZigTest;
     }
@@ -241,7 +249,7 @@ test "RadixTree: 7" {
     try expectTreeEqual(&tree, expected);
 }
 
-test "RadixTree: 8" {
+test "RadixTree: 9" {
     if (true) {
         return error.SkipZigTest;
     }
