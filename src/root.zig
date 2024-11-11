@@ -75,8 +75,17 @@ const RadixTree = struct {
         }
 
         fn lookup(self: *Node, seq: []const u8) ?i64 {
-            _ = self;
-            _ = seq;
+            if (!std.mem.startsWith(u8, seq, self.seq)) {
+                return null;
+            }
+            if (self.seq.len == seq.len) {
+                return self.value;
+            }
+            const sub_seq = seq[self.seq.len..];
+            const child = self.children.getPtr(sub_seq[0]);
+            if (child) |node| {
+                return node.lookup(sub_seq);
+            }
             return null;
         }
 
