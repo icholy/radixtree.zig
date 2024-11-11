@@ -149,7 +149,7 @@ const RadixTree = struct {
             return;
         }
         if (self.root) |*node| {
-            try node.insert(seq, value);
+            try node.insert(self.allocator, seq, value);
         } else {
             self.root = try Node.init(self.allocator, seq, value);
         }
@@ -177,19 +177,19 @@ test "RadixTree: 0" {
     try expectTreeEqual(&tree, expected);
 }
 
-// test "RadixTree: 1" {
-//     var tree = RadixTree.init(testing.allocator);
-//     defer tree.deinit();
-//     try tree.insert("foo", 1);
-//     try tree.insert("bar", 2);
-//     const expected =
-//         \\bar - 2
-//         \\foo - 1
-//         \\
-//     ;
-//     try expectTreeEqual(&tree, expected);
-// }
-//
+test "RadixTree: 1" {
+    var tree = RadixTree.init(testing.allocator);
+    defer tree.deinit();
+    try tree.insert("foo", 1);
+    try tree.insert("bar", 2);
+    const expected =
+        \\bar - 2
+        \\foo - 1
+        \\
+    ;
+    try expectTreeEqual(&tree, expected);
+}
+
 // test "RadixTree: 2" {
 //     var tree = RadixTree.init(testing.allocator);
 //     defer tree.deinit();
