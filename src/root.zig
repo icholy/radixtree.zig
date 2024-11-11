@@ -122,8 +122,9 @@ const RadixTree = struct {
             std.debug.assert(ok);
             errdefer child.deinit(allocator);
             // prefix the child's seq with ours
+            const child_len = child.seq.len;
             child.seq = try allocator.realloc(child.seq, self.seq.len + child.seq.len);
-            std.mem.copyBackwards(u8, child.seq[self.seq.len - 1 ..], child.seq);
+            std.mem.copyBackwards(u8, child.seq[self.seq.len..], child.seq[0..child_len]);
             std.mem.copyForwards(u8, child.seq, self.seq);
             // replace ourselves with the child
             self.deinit(allocator);
