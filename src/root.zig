@@ -549,15 +549,15 @@ test "RadixTree.iterator: 4" {
 test "RadixTree.iterator.seek: 1" {
     var tree = RadixTree(i64).init(testing.allocator);
     defer tree.deinit();
-    try tree.insert("a", 0);
-    try tree.insert("b", 0);
-    try tree.insert("c", 0);
+    try tree.insert("aaa", 0);
+    try tree.insert("bbb", 0);
+    try tree.insert("ccc", 0);
     var it = try tree.iterator();
     defer it.deinit();
-    try it.seek("b");
+    try it.seek("bb");
     const expected =
-        \\b - 0
-        \\c - 0
+        \\bbb - 0
+        \\ccc - 0
         \\
     ;
     try expectIteratorEqual(&it, expected);
