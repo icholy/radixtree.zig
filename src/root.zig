@@ -192,7 +192,7 @@ pub fn RadixTree(comptime T: type) type {
                             return .{ .seq = top.node.seq, .value = value };
                         }
                     }
-                    if (top.node.children.entries.items.len >= top.index) {
+                    if (top.index >= top.node.children.entries.items.len) {
                         _ = self.stack.pop();
                         return null;
                     }
