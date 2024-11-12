@@ -221,10 +221,14 @@ pub fn RadixTree(comptime T: type) type {
                 const offset = 0;
                 const node = self.stack.items[0].node;
                 while (self.stack.items.len > 0) {
-                    _ = std.mem.indexOfDiff(u8, node.seq, prefix[offset..]) orelse {
+                    const index = std.mem.indexOfDiff(u8, node.seq, prefix[offset..]) orelse {
                         // exact match
                         return;
                     };
+                    if (index == prefix.len) {
+                        // partial match
+                        return;
+                    }
                     return error.NotImplemented;
                 }
             }
@@ -552,12 +556,12 @@ test "RadixTree.iterator: 4" {
 test "RadixTree.iterator.seek: 1" {
     var tree = RadixTree(i64).init(testing.allocator);
     defer tree.deinit();
-    try tree.insert("a", 0);
+    try tree.insert("aaa", 0);
     var it = try tree.iterator();
     defer it.deinit();
     try it.seek("a");
     const expected =
-        \\a - 0
+        \\aaa - 0
         \\
     ;
     try expectIteratorEqual(&it, expected);
