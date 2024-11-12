@@ -34,6 +34,14 @@ fn SortedByteMap(comptime T: type) type {
             return null;
         }
 
+        fn getPtr(self: *Self, key: u8) ?*T {
+            const index = self.search(key);
+            if (index.exists) {
+                return &self.entries.items[index.value].value;
+            }
+            return null;
+        }
+
         fn put(self: *Self, key: u8, value: T) !?T {
             const index = self.search(key);
             if (index.exists) {
@@ -73,7 +81,7 @@ fn SortedByteMap(comptime T: type) type {
 
 pub fn RadixTree(comptime T: type) type {
     return struct {
-        const ChildrenMap = std.AutoHashMap(u8, Node);
+        const ChildrenMap = SortedByteMap(Node);
 
         const InsertErrors = error{
             NotImplemented,
@@ -93,10 +101,9 @@ pub fn RadixTree(comptime T: type) type {
                 };
             }
 
-            fn deinit(self: *Node, allocator: std.mem.Allocator) void {
-                var it = self.children.valueIterator();
-                while (it.next()) |node| {
-                    node.deinit(allocator);
+            fn deinit(self: Node, allocator: std.mem.Allocator) void {
+                for (self.children.entries.items) |entry| {
+                    entry.value.deinit(allocator);
                 }
                 self.children.deinit();
                 allocator.free(self.seq);
@@ -120,7 +127,7 @@ pub fn RadixTree(comptime T: type) type {
                     var prev = self.*;
                     self.* = try Node.init(allocator, seq, value);
                     errdefer prev.deinit(allocator);
-                    try self.children.put(prev.seq[0], prev);
+                    _ = try self.children.put(prev.seq[0], prev);
                     return;
                 }
                 // case: the current node and the new seq share a common parent.
@@ -130,8 +137,8 @@ pub fn RadixTree(comptime T: type) type {
                 var new = try Node.init(allocator, seq[i..], value);
                 errdefer new.deinit(allocator);
                 self.* = try Node.init(allocator, seq[0..i], null);
-                try self.children.put(new.seq[0], new);
-                try self.children.put(prev.seq[0], prev);
+                _ = try self.children.put(new.seq[0], new);
+                _ = try self.children.put(prev.seq[0], prev);
             }
 
             fn insertChild(self: *Node, allocator: std.mem.Allocator, seq: []const u8, value: T) InsertErrors!void {
@@ -140,7 +147,7 @@ pub fn RadixTree(comptime T: type) type {
                 } else {
                     var node = try Node.init(allocator, seq, value);
                     errdefer node.deinit(allocator);
-                    try self.children.put(seq[0], node);
+                    _ = try self.children.put(seq[0], node);
                 }
             }
 
@@ -160,7 +167,7 @@ pub fn RadixTree(comptime T: type) type {
             }
 
             fn empty(self: *Node) bool {
-                return self.value == null and self.children.count() == 0;
+                return self.value == null and self.children.entries.items.len == 0;
             }
 
             fn remove(self: *Node, allocator: std.mem.Allocator, seq: []const u8) !?T {
@@ -177,8 +184,8 @@ pub fn RadixTree(comptime T: type) type {
                         value = try node.remove(allocator, sub_seq);
                         if (node.empty()) {
                             node.deinit(allocator);
-                            const ok = self.children.remove(sub_seq[0]);
-                            std.debug.assert(ok);
+                            const old = self.children.remove(sub_seq[0]);
+                            std.debug.assert(old != null);
                         }
                     }
                 }
@@ -187,12 +194,11 @@ pub fn RadixTree(comptime T: type) type {
             }
 
             fn compress(self: *Node, allocator: std.mem.Allocator) !void {
-                if (self.children.count() != 1 or self.value != null) return;
+                if (self.children.entries.items.len != 1 or self.value != null) return;
                 // detach the only child
-                var it = self.children.valueIterator();
-                var child = it.next().?.*;
-                const ok = self.children.remove(child.seq[0]);
-                std.debug.assert(ok);
+                var child = self.children.entries.items[0].value;
+                const old = self.children.remove(child.seq[0]);
+                std.debug.assert(old != null);
                 errdefer child.deinit(allocator);
                 // prefix the child's seq with ours
                 const child_len = child.seq.len;
@@ -204,7 +210,7 @@ pub fn RadixTree(comptime T: type) type {
                 self.* = child;
             }
 
-            fn write(self: *Node, w: std.io.AnyWriter, indent: usize) !void {
+            fn write(self: Node, w: std.io.AnyWriter, indent: usize) !void {
                 for (0..indent) |_| {
                     try w.writeByte(' ');
                 }
@@ -217,9 +223,8 @@ pub fn RadixTree(comptime T: type) type {
                     try w.print(" - {d}", .{value});
                 }
                 try w.writeAll("\n");
-                var it = self.children.valueIterator();
-                while (it.next()) |node| {
-                    try node.write(w, indent + 1);
+                for (self.children.entries.items) |entry| {
+                    try entry.value.write(w, indent + 1);
                 }
             }
         };
