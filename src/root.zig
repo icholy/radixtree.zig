@@ -158,6 +158,11 @@ pub fn RadixTree(comptime T: type) type {
                 index: usize = 0,
             };
 
+            const IteratorEntry = struct {
+                seq: []const u8,
+                value: T,
+            };
+
             stack: std.ArrayList(IteratorNode),
 
             pub fn init(allocator: std.mem.Allocator, root: ?Node) !Iterator {
@@ -172,7 +177,7 @@ pub fn RadixTree(comptime T: type) type {
                 self.stack.deinit();
             }
 
-            pub fn next(self: *Iterator) !?T {
+            pub fn next(self: *Iterator) !?IteratorEntry {
                 _ = self;
                 return null;
             }
@@ -437,4 +442,17 @@ test "RadixTree.iterator: 1" {
     defer it.deinit();
     const value = try it.next();
     try testing.expectEqual(null, value);
+}
+
+test "RadixTree.iterator: 2" {
+    var tree = RadixTree(i64).init(testing.allocator);
+    defer tree.deinit();
+    try tree.insert("foo", 1);
+    var it = try tree.iterator();
+    defer it.deinit();
+    const entry = try it.next();
+    const Entry = RadixTree(i64).Iterator.IteratorEntry;
+    try testing.expectEqualDeep(Entry{ .seq = "foo", .value = 1 }, entry);
+    const entry2 = try it.next();
+    try testing.expectEqual(null, entry2);
 }
