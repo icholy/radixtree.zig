@@ -155,7 +155,7 @@ pub fn RadixTree(comptime T: type) type {
         pub const Iterator = struct {
             const IteratorNode = struct {
                 node: Node,
-                index: usize = 0,
+                index: usize,
             };
 
             const IteratorEntry = struct {
@@ -174,7 +174,7 @@ pub fn RadixTree(comptime T: type) type {
                     .allocator = allocator,
                 };
                 if (root) |node| {
-                    try it.stack.append(.{ .node = node });
+                    try it.stack.append(.{ .node = node, .index = 257 });
                 }
                 return it;
             }
@@ -185,6 +185,17 @@ pub fn RadixTree(comptime T: type) type {
 
             pub fn next(self: *Iterator) !?IteratorEntry {
                 if (self.stack.items.len == 0) {
+                    return null;
+                }
+                const top = &self.stack.items[self.stack.items.len - 1];
+                if (top.index == 257) {
+                    top.index = 0;
+                    if (top.node.value) |value| {
+                        return .{ .seq = top.node.seq, .value = value };
+                    }
+                }
+                if (top.node.children.entries.items.len >= top.index) {
+                    _ = self.stack.pop();
                     return null;
                 }
                 return error.NotImplemented;
