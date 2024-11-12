@@ -26,6 +26,14 @@ pub fn SortedByteMap(comptime T: type) type {
             self.entries.deinit();
         }
 
+        pub fn count(self: Self) usize {
+            return self.entries.items.len;
+        }
+
+        pub fn at(self: Self, index: usize) T {
+            return self.entries.items[index].value;
+        }
+
         pub fn get(self: *Self, key: u8) ?T {
             const index = self.search(key);
             if (index.exists) {

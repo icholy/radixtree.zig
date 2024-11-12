@@ -174,7 +174,7 @@ pub fn RadixTree(comptime T: type) type {
                     .allocator = allocator,
                 };
                 if (root) |node| {
-                    try it.stack.append(.{ .node = node, .index = 257 });
+                    try it.push(node);
                 }
                 return it;
             }
@@ -184,12 +184,14 @@ pub fn RadixTree(comptime T: type) type {
                 self.seq.deinit();
             }
 
-            fn buildSeq(self: *Iterator) ![]const u8 {
-                self.seq.clearRetainingCapacity();
-                for (self.stack.items) |entry| {
-                    try self.seq.appendSlice(entry.node.seq);
-                }
-                return self.seq.items;
+            fn push(self: *Iterator, node: Node) !void {
+                try self.seq.appendSlice(node.seq);
+                try self.stack.append(.{ .node = node, .index = 257 });
+            }
+
+            fn pop(self: *Iterator) void {
+                const entry = self.stack.pop();
+                self.seq.shrinkRetainingCapacity(self.seq.items.len - entry.node.seq.len);
             }
 
             pub fn next(self: *Iterator) !?IteratorEntry {
@@ -198,15 +200,14 @@ pub fn RadixTree(comptime T: type) type {
                     if (top.index == 257) {
                         top.index = 0;
                         if (top.node.value) |value| {
-                            return .{ .seq = try self.buildSeq(), .value = value };
+                            return .{ .seq = self.seq.items, .value = value };
                         }
                     }
-                    if (top.index >= top.node.children.entries.items.len) {
-                        _ = self.stack.pop();
+                    if (top.index >= top.node.children.count()) {
+                        self.pop();
                         return null;
                     }
-                    const child = top.node.children.entries.items[top.index].value;
-                    try self.stack.append(.{ .node = child, .index = 257 });
+                    try self.push(top.node.children.at(top.index));
                     top.index += 1;
                 }
                 return null;
