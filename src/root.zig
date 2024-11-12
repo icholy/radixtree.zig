@@ -10,10 +10,29 @@ fn SortedByteMap(comptime T: type) type {
     return struct {
         entries: std.ArrayList(Entry),
 
-        fn init(allocator: std.mem.Allocator) SortedByteMap(T) {
+        const Self = @This();
+
+        fn init(allocator: std.mem.Allocator) Self {
             return .{
-                .entries = std.ArrayList(T).init(allocator),
+                .entries = std.ArrayList(Entry).init(allocator),
             };
+        }
+
+        fn deinit(self: Self) void {
+            self.entries.deinit();
+        }
+
+        fn get(self: *Self, key: u8) ?T {
+            const S = struct {
+                fn compare(needle: u8, entry: Entry) std.math.Order {
+                    return std.math.order(needle, entry.key);
+                }
+            };
+            const index = std.sort.binarySearch(Entry, self.entries.items, key, S.compare);
+            if (index) |i| {
+                return self.entries.items[i].value;
+            }
+            return null;
         }
     };
 }
@@ -419,6 +438,10 @@ test "RadixTree(i64).fuzz" {
     try std.testing.fuzz(global.testOne, .{});
 }
 
-test "SortedByteMap.put: 1" {
-    return error.SkipZigTest;
+test "SortedByteMap.get: 1" {
+    var map = SortedByteMap(i64).init(testing.allocator);
+    defer map.deinit();
+    try map.entries.append(.{ .key = '0', .value = 123 });
+    const value = map.get('0');
+    try testing.expectEqual(123, value);
 }
