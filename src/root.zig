@@ -160,8 +160,8 @@ pub fn RadixTree(comptime T: type) type {
 
             stack: std.ArrayList(IteratorNode),
 
-            pub fn init(allocator: std.mem.Allocator, root: ?Node) Iterator {
-                const it = Iterator{ .stack = std.ArrayList(IteratorNode).init(allocator) };
+            pub fn init(allocator: std.mem.Allocator, root: ?Node) !Iterator {
+                var it = Iterator{ .stack = std.ArrayList(IteratorNode).init(allocator) };
                 if (root) |node| {
                     try it.stack.append(.{ .node = node });
                 }
@@ -427,4 +427,13 @@ test "RadixTree.fuzz" {
         }
     };
     try std.testing.fuzz(global.testOne, .{});
+}
+
+test "RadixTree.iterator: 1" {
+    var tree = RadixTree(i64).init(testing.allocator);
+    defer tree.deinit();
+    var it = try tree.iterator();
+    defer it.deinit();
+    const value = try it.next();
+    try testing.expectEqual(null, value);
 }
