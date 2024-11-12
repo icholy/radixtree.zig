@@ -151,7 +151,7 @@ pub fn RadixTree(comptime T: type) type {
         pub const Iterator = struct {
 
             // we use this a sentinel value to signal that a node
-            // has not been used yet. Since the children are all byte
+            // has not been used yet. Since the children are all bytes
             // there will never be more than 256 of them.
             const UNUSED = 257;
 
