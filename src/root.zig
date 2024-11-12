@@ -172,7 +172,8 @@ pub fn RadixTree(comptime T: type) type {
                 self.stack.deinit();
             }
 
-            pub fn next() !?T {
+            pub fn next(self: *Iterator) !?T {
+                _ = self;
                 return null;
             }
         };
