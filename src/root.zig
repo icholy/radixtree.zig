@@ -149,9 +149,15 @@ pub fn RadixTree(comptime T: type) type {
         };
 
         pub const Iterator = struct {
+
+            // we use this a sentinel value to signal that a node
+            // has not been used yet. Since the children are all byte
+            // there will never be more than 256 of them.
+            const UNUSED = 257;
+
             const IteratorNode = struct {
                 node: Node,
-                index: usize,
+                index: usize = UNUSED,
             };
 
             const IteratorEntry = struct {
@@ -182,7 +188,7 @@ pub fn RadixTree(comptime T: type) type {
 
             fn push(self: *Iterator, node: Node) !void {
                 try self.seq.appendSlice(node.seq);
-                try self.stack.append(.{ .node = node, .index = 257 });
+                try self.stack.append(.{ .node = node });
             }
 
             fn pop(self: *Iterator) void {
@@ -193,7 +199,7 @@ pub fn RadixTree(comptime T: type) type {
             pub fn next(self: *Iterator) !?IteratorEntry {
                 while (self.stack.items.len > 0) {
                     const top = &self.stack.items[self.stack.items.len - 1];
-                    if (top.index == 257) {
+                    if (top.index == UNUSED) {
                         top.index = 0;
                         if (top.node.value) |value| {
                             return .{ .seq = self.seq.items, .value = value };
