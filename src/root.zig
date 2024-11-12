@@ -195,9 +195,13 @@ pub fn RadixTree(comptime T: type) type {
                 self.seq.shrinkRetainingCapacity(self.seq.items.len - entry.node.seq.len);
             }
 
+            fn current(self: *Iterator) *IteratorNode {
+                return &self.stack.items[self.stack.items.len - 1];
+            }
+
             pub fn next(self: *Iterator) !?IteratorEntry {
                 while (self.stack.items.len > 0) {
-                    const entry = &self.stack.items[self.stack.items.len - 1];
+                    const entry = self.current();
                     if (entry.next == SELF) {
                         entry.next = 0;
                         if (entry.node.value) |value| {
@@ -215,19 +219,31 @@ pub fn RadixTree(comptime T: type) type {
             }
 
             pub fn seek(self: *Iterator, prefix: []const u8) !void {
-                if (prefix.len == 0) {
+                if (prefix.len == 0 or self.stack.items.len != 1) {
                     return;
                 }
-                const offset = 0;
-                const node = self.stack.items[0].node;
+                var remaining = prefix;
                 while (self.stack.items.len > 0) {
-                    const index = std.mem.indexOfDiff(u8, node.seq, prefix[offset..]) orelse {
-                        // exact match
+                    const entry = self.current();
+                    const node = entry.node;
+                    const diff = std.mem.indexOfDiff(u8, node.seq, remaining) orelse {
+                        // case: node seq exactly matches prefix.
                         return;
                     };
-                    if (index == prefix.len) {
-                        // partial match
+                    if (diff == prefix.len) {
+                        // case: node seq has prefix.
                         return;
+                    }
+                    if (diff == node.seq.len) {
+                        // case: node matches, but there's more prefix remaining.
+                        remaining = remaining[diff..];
+                        const index = node.children.search(remaining[0]);
+                        if (!index.exists) {
+                            return error.NotImplemented;
+                        }
+                        entry.next = index.value + 1;
+                        try self.push(node.children.at(index.value));
+                        continue;
                     }
                     return error.NotImplemented;
                 }
@@ -556,12 +572,13 @@ test "RadixTree.iterator: 4" {
 test "RadixTree.iterator.seek: 1" {
     var tree = RadixTree(i64).init(testing.allocator);
     defer tree.deinit();
-    try tree.insert("aaa", 0);
+    try tree.insert("a", 0);
+    try tree.insert("aa", 0);
     var it = try tree.iterator();
     defer it.deinit();
-    try it.seek("a");
+    try it.seek("aa");
     const expected =
-        \\aaa - 0
+        \\aa - 0
         \\
     ;
     try expectIteratorEqual(&it, expected);
