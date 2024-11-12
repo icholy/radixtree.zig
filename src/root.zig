@@ -2,20 +2,19 @@ const std = @import("std");
 const testing = std.testing;
 
 fn SortedByteMap(comptime T: type) type {
-    const Entry = struct {
-        key: u8,
-        value: T,
-    };
-
     const SearchIndex = struct {
         value: usize,
         exists: bool,
     };
 
     return struct {
-        entries: std.ArrayList(Entry),
-
         const Self = @This();
+        const Entry = struct {
+            key: u8,
+            value: T,
+        };
+
+        entries: std.ArrayList(Entry),
 
         fn init(allocator: std.mem.Allocator) Self {
             return .{
@@ -40,7 +39,7 @@ fn SortedByteMap(comptime T: type) type {
             if (index.exists) {
                 self.entries.items[index.value].value = value;
             } else {
-                return error.NotImplemented;
+                try self.entries.insert(index.value, .{ .key = key, .value = value });
             }
         }
 
@@ -478,4 +477,19 @@ test "SortedByteMap.put: 1" {
     try map.put('0', 42);
     const value = map.get('0');
     try testing.expectEqual(42, value);
+}
+
+test "SortedByteMap.put: 2" {
+    var map = SortedByteMap(i64).init(testing.allocator);
+    defer map.deinit();
+    try map.put('0', 0);
+    try map.put('2', 2);
+    try map.put('1', 1);
+
+    const Entry = SortedByteMap(i64).Entry;
+    try testing.expectEqualDeep(map.entries.items, &[_]Entry{
+        .{ .key = '0', .value = 0 },
+        .{ .key = '1', .value = 1 },
+        .{ .key = '2', .value = 2 },
+    });
 }
