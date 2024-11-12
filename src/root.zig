@@ -471,9 +471,25 @@ test "RadixTree.iterator: 2" {
     try tree.insert("foo", 1);
     var it = try tree.iterator();
     defer it.deinit();
-    const entry = try it.next();
     const Entry = RadixTree(i64).Iterator.IteratorEntry;
+    const entry = try it.next();
     try testing.expectEqualDeep(Entry{ .seq = "foo", .value = 1 }, entry);
     const entry2 = try it.next();
     try testing.expectEqual(null, entry2);
+}
+
+test "RadixTree.iterator: 3" {
+    var tree = RadixTree(i64).init(testing.allocator);
+    defer tree.deinit();
+    try tree.insert("foo", 1);
+    try tree.insert("foobar", 2);
+    var it = try tree.iterator();
+    defer it.deinit();
+    const Entry = RadixTree(i64).Iterator.IteratorEntry;
+    const entry = try it.next();
+    try testing.expectEqualDeep(Entry{ .seq = "foo", .value = 1 }, entry);
+    const entry2 = try it.next();
+    try testing.expectEqualDeep(Entry{ .seq = "foobar", .value = 2 }, entry2);
+    const entry3 = try it.next();
+    try testing.expectEqual(null, entry3);
 }
