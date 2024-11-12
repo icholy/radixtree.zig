@@ -242,13 +242,14 @@ pub fn RadixTree(comptime T: type) type {
                     // case: node matches, but there's more prefix remaining.
                     remaining = remaining[diff..];
                     const index = node.children.search(remaining[0]);
-                    entry.next = index.value + 1;
+                    entry.next = index.value;
                     if (!index.exists) {
                         if (entry.next >= node.children.count()) {
                             self.pop();
                         }
                         return;
                     }
+                    entry.next += 1;
                     try self.push(node.children.at(index.value));
                 }
             }
