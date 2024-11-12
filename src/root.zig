@@ -216,9 +216,15 @@ pub fn RadixTree(comptime T: type) type {
             }
 
             pub fn seek(self: *Iterator, prefix: []const u8) !void {
-                _ = self;
-                _ = prefix;
-                return error.NotImplemented;
+                if (prefix.len == 0) {
+                    return;
+                }
+                while (try self.next()) |entry| {
+                    if (std.mem.startsWith(u8, entry.seq, prefix)) {
+                        self.stack.items[self.stack.items.len - 1].index = UNUSED;
+                        return;
+                    }
+                }
             }
         };
 
@@ -474,11 +480,9 @@ test "RadixTree.fuzz" {
     try std.testing.fuzz(global.testOne, .{});
 }
 
-fn expectIteratorEqual(tree: *RadixTree(i64), expected: []const u8) !void {
+fn expectIteratorEqual(it: *RadixTree(i64).Iterator, expected: []const u8) !void {
     var output = std.ArrayList(u8).init(testing.allocator);
     defer output.deinit();
-    var it = try tree.iterator();
-    defer it.deinit();
     while (try it.next()) |entry| {
         try output.writer().print("{s} - {d}\n", .{ entry.seq, entry.value });
     }
@@ -488,8 +492,10 @@ fn expectIteratorEqual(tree: *RadixTree(i64), expected: []const u8) !void {
 test "RadixTree.iterator: 1" {
     var tree = RadixTree(i64).init(testing.allocator);
     defer tree.deinit();
+    var it = try tree.iterator();
+    defer it.deinit();
     const expected = "";
-    try expectIteratorEqual(&tree, expected);
+    try expectIteratorEqual(&it, expected);
 }
 
 test "RadixTree.iterator: 2" {
@@ -502,7 +508,7 @@ test "RadixTree.iterator: 2" {
         \\foo - 1
         \\
     ;
-    try expectIteratorEqual(&tree, expected);
+    try expectIteratorEqual(&it, expected);
 }
 
 test "RadixTree.iterator: 3" {
@@ -510,12 +516,14 @@ test "RadixTree.iterator: 3" {
     defer tree.deinit();
     try tree.insert("foo", 1);
     try tree.insert("foobar", 2);
+    var it = try tree.iterator();
+    defer it.deinit();
     const expected =
         \\foo - 1
         \\foobar - 2
         \\
     ;
-    try expectIteratorEqual(&tree, expected);
+    try expectIteratorEqual(&it, expected);
 }
 
 test "RadixTree.iterator: 4" {
@@ -526,6 +534,8 @@ test "RadixTree.iterator: 4" {
     try tree.insert("bof", 6);
     try tree.insert("f", 3);
     try tree.insert("fizz", 1);
+    var it = try tree.iterator();
+    defer it.deinit();
     const expected =
         \\b - 2
         \\bof - 6
@@ -534,7 +544,7 @@ test "RadixTree.iterator: 4" {
         \\fizz - 1
         \\
     ;
-    try expectIteratorEqual(&tree, expected);
+    try expectIteratorEqual(&it, expected);
 }
 
 test "RadixTree.iterator.seek: 1" {
@@ -551,5 +561,5 @@ test "RadixTree.iterator.seek: 1" {
         \\c - 0
         \\
     ;
-    try expectIteratorEqual(&tree, expected);
+    try expectIteratorEqual(&it, expected);
 }
