@@ -214,6 +214,12 @@ pub fn RadixTree(comptime T: type) type {
                 }
                 return null;
             }
+
+            pub fn seek(self: *Iterator, prefix: []const u8) !void {
+                _ = self;
+                _ = prefix;
+                return error.NotImplemented;
+            }
         };
 
         allocator: std.mem.Allocator,
@@ -526,6 +532,23 @@ test "RadixTree.iterator: 4" {
         \\boobar - 0
         \\f - 3
         \\fizz - 1
+        \\
+    ;
+    try expectIteratorEqual(&tree, expected);
+}
+
+test "RadixTree.iterator.seek: 1" {
+    var tree = RadixTree(i64).init(testing.allocator);
+    defer tree.deinit();
+    try tree.insert("a", 0);
+    try tree.insert("b", 0);
+    try tree.insert("c", 0);
+    var it = try tree.iterator();
+    defer it.deinit();
+    try it.seek("b");
+    const expected =
+        \\b - 0
+        \\c - 0
         \\
     ;
     try expectIteratorEqual(&tree, expected);
