@@ -588,19 +588,19 @@ test "RadixTree.iterator.seek: 1" {
     try expectIteratorEqual(&it, expected);
 }
 
-// test "RadixTree.iterator.seek: 2" {
-//     var tree = RadixTree(i64).init(testing.allocator);
-//     defer tree.deinit();
-//     try tree.insert("aaa", 0);
-//     try tree.insert("bbb", 0);
-//     try tree.insert("ccc", 0);
-//     var it = try tree.iterator();
-//     defer it.deinit();
-//     try it.seek("bb");
-//     const expected =
-//         \\bbb - 0
-//         \\ccc - 0
-//         \\
-//     ;
-//     try expectIteratorEqual(&it, expected);
-// }
+test "RadixTree.iterator.seek: 2" {
+    var tree = RadixTree(i64).init(testing.allocator);
+    defer tree.deinit();
+    try tree.insert("aaa", 0);
+    try tree.insert("bbb", 0);
+    try tree.insert("ccc", 0);
+    var it = try tree.iterator();
+    defer it.deinit();
+    try it.seek("bb");
+    const expected =
+        \\bbb - 0
+        \\ccc - 0
+        \\
+    ;
+    try expectIteratorEqual(&it, expected);
+}
