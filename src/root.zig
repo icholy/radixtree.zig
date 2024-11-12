@@ -245,14 +245,14 @@ fn expectTreeEqual(tree: *RadixTree(i64), expected: []const u8) !void {
     try testing.expectEqualStrings(expected, output.items);
 }
 
-test "RadixTree(i64).init: 0" {
+test "RadixTree.init: 0" {
     var tree = RadixTree(i64).init(testing.allocator);
     defer tree.deinit();
     const expected = "";
     try expectTreeEqual(&tree, expected);
 }
 
-test "RadixTree(i64).insert: 1" {
+test "RadixTree.insert: 1" {
     var tree = RadixTree(i64).init(testing.allocator);
     defer tree.deinit();
     try tree.insert("foo", 1);
@@ -266,7 +266,7 @@ test "RadixTree(i64).insert: 1" {
     try expectTreeEqual(&tree, expected);
 }
 
-test "RadixTree(i64).insert: 2" {
+test "RadixTree.insert: 2" {
     var tree = RadixTree(i64).init(testing.allocator);
     defer tree.deinit();
     try tree.insert("foo", 1);
@@ -280,7 +280,7 @@ test "RadixTree(i64).insert: 2" {
     try expectTreeEqual(&tree, expected);
 }
 
-test "RadixTree(i64).insert: 3" {
+test "RadixTree.insert: 3" {
     var tree = RadixTree(i64).init(testing.allocator);
     defer tree.deinit();
     try tree.insert("foobar", 1);
@@ -293,7 +293,7 @@ test "RadixTree(i64).insert: 3" {
     try expectTreeEqual(&tree, expected);
 }
 
-test "RadixTree(i64).insert: 4" {
+test "RadixTree.insert: 4" {
     var tree = RadixTree(i64).init(testing.allocator);
     defer tree.deinit();
     try tree.insert("foobar", 1);
@@ -307,7 +307,7 @@ test "RadixTree(i64).insert: 4" {
     try expectTreeEqual(&tree, expected);
 }
 
-test "RadixTree(i64).insert: 5" {
+test "RadixTree.insert: 5" {
     var tree = RadixTree(i64).init(testing.allocator);
     defer tree.deinit();
     try tree.insert("foobar", 1);
@@ -323,7 +323,7 @@ test "RadixTree(i64).insert: 5" {
     try expectTreeEqual(&tree, expected);
 }
 
-test "RadixTree(i64).insert: 6" {
+test "RadixTree.insert: 6" {
     var tree = RadixTree(i64).init(testing.allocator);
     defer tree.deinit();
     try tree.insert("foobar", 1);
@@ -337,7 +337,7 @@ test "RadixTree(i64).insert: 6" {
     try expectTreeEqual(&tree, expected);
 }
 
-test "RadixTree(i64).remove: 1" {
+test "RadixTree.remove: 1" {
     var tree = RadixTree(i64).init(testing.allocator);
     defer tree.deinit();
     try tree.insert("foo", 1);
@@ -345,7 +345,7 @@ test "RadixTree(i64).remove: 1" {
     try expectTreeEqual(&tree, "");
 }
 
-test "RadixTree(i64).remove: 2" {
+test "RadixTree).remove: 2" {
     var tree = RadixTree(i64).init(testing.allocator);
     defer tree.deinit();
     try tree.insert("foo", 1);
@@ -358,7 +358,7 @@ test "RadixTree(i64).remove: 2" {
     try expectTreeEqual(&tree, expected);
 }
 
-test "RadixTree(i64).remove: 3" {
+test "RadixTree.remove: 3" {
     var tree = RadixTree(i64).init(testing.allocator);
     defer tree.deinit();
     try tree.insert("foo", 1);
@@ -371,7 +371,7 @@ test "RadixTree(i64).remove: 3" {
     try expectTreeEqual(&tree, expected);
 }
 
-test "RadixTree(i64).remove: 4" {
+test "RadixTree.remove: 4" {
     var tree = RadixTree(i64).init(testing.allocator);
     defer tree.deinit();
     try tree.insert("foo", 1);
@@ -384,14 +384,14 @@ test "RadixTree(i64).remove: 4" {
     try expectTreeEqual(&tree, expected);
 }
 
-test "RadixTree(i64).lookup: 1" {
+test "RadixTree.lookup: 1" {
     var tree = RadixTree(i64).init(testing.allocator);
     defer tree.deinit();
     try tree.insert("foo", 1);
     try testing.expectEqual(1, tree.lookup("foo"));
 }
 
-test "RadixTree(i64).lookup: 2" {
+test "RadixTree.lookup: 2" {
     var tree = RadixTree(i64).init(testing.allocator);
     defer tree.deinit();
     try tree.insert("foo", 1);
@@ -400,7 +400,7 @@ test "RadixTree(i64).lookup: 2" {
     try testing.expectEqual(2, tree.lookup("f"));
 }
 
-test "RadixTree(i64).fuzz" {
+test "RadixTree.fuzz" {
     const global = struct {
         fn testOne(input: []const u8) anyerror!void {
             // we treat first 2 bytes as 8 bit numbers.
