@@ -34,13 +34,23 @@ fn SortedByteMap(comptime T: type) type {
             return null;
         }
 
-        fn put(self: *Self, key: u8, value: T) !void {
+        fn put(self: *Self, key: u8, value: T) !?T {
             const index = self.search(key);
             if (index.exists) {
+                const prev = self.entries.items[index.value].value;
                 self.entries.items[index.value].value = value;
-            } else {
-                try self.entries.insert(index.value, .{ .key = key, .value = value });
+                return prev;
             }
+            try self.entries.insert(index.value, .{ .key = key, .value = value });
+            return null;
+        }
+
+        fn remove(self: *Self, key: u8) ?T {
+            const index = self.search(key);
+            if (index.exists) {
+                return self.entries.orderedRemove(index.value);
+            }
+            return null;
         }
 
         fn search(self: Self, key: u8) SearchIndex {
@@ -474,7 +484,7 @@ test "SortedByteMap.put: 1" {
     var map = SortedByteMap(i64).init(testing.allocator);
     defer map.deinit();
     try map.entries.append(.{ .key = '0', .value = 123 });
-    try map.put('0', 42);
+    _ = try map.put('0', 42);
     const value = map.get('0');
     try testing.expectEqual(42, value);
 }
@@ -482,9 +492,9 @@ test "SortedByteMap.put: 1" {
 test "SortedByteMap.put: 2" {
     var map = SortedByteMap(i64).init(testing.allocator);
     defer map.deinit();
-    try map.put('0', 0);
-    try map.put('2', 2);
-    try map.put('1', 1);
+    _ = try map.put('0', 0);
+    _ = try map.put('2', 2);
+    _ = try map.put('1', 1);
 
     const Entry = SortedByteMap(i64).Entry;
     try testing.expectEqualDeep(map.entries.items, &[_]Entry{
