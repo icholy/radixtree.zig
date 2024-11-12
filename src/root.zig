@@ -7,6 +7,11 @@ fn SortedByteMap(comptime T: type) type {
         value: T,
     };
 
+    const SearchIndex = struct {
+        value: usize,
+        exists: bool,
+    };
+
     return struct {
         entries: std.ArrayList(Entry),
 
@@ -23,28 +28,36 @@ fn SortedByteMap(comptime T: type) type {
         }
 
         fn get(self: *Self, key: u8) ?T {
-            const index = self.search(key, true);
-            if (index) |i| {
-                return self.entries.items[i].value;
+            const index = self.search(key);
+            if (index.exists) {
+                return self.entries.items[index.value].value;
             }
             return null;
         }
 
-        fn search(self: Self, key: u8, exact: bool) ?usize {
+        fn put(self: *Self, key: u8, value: T) !void {
+            const index = self.search(key);
+            if (index.exists) {
+                self.entries.items[index.value].value = value;
+            } else {
+                return error.NotImplemented;
+            }
+        }
+
+        fn search(self: Self, key: u8) SearchIndex {
             const items = self.entries.items;
             var low: usize = 0;
             var high: usize = items.len;
-
             while (low < high) {
                 // Avoid overflowing in the midpoint calculation
                 const mid = low + (high - low) / 2;
                 switch (std.math.order(key, items[mid].key)) {
-                    .eq => return mid,
+                    .eq => return .{ .value = mid, .exists = true },
                     .gt => low = mid + 1,
                     .lt => high = mid,
                 }
             }
-            return if (exact) null else low;
+            return .{ .value = low, .exists = false };
         }
     };
 }
@@ -456,4 +469,13 @@ test "SortedByteMap.get: 1" {
     try map.entries.append(.{ .key = '0', .value = 123 });
     const value = map.get('0');
     try testing.expectEqual(123, value);
+}
+
+test "SortedByteMap.put: 1" {
+    var map = SortedByteMap(i64).init(testing.allocator);
+    defer map.deinit();
+    try map.entries.append(.{ .key = '0', .value = 123 });
+    try map.put('0', 42);
+    const value = map.get('0');
+    try testing.expectEqual(42, value);
 }
