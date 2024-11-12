@@ -604,3 +604,23 @@ test "RadixTree.iterator.seek: 2" {
     ;
     try expectIteratorEqual(&it, expected);
 }
+
+test "RadixTree.iterator.seek: 3" {
+    var tree = RadixTree(i64).init(testing.allocator);
+    defer tree.deinit();
+    try tree.insert("1234", 0);
+    try tree.insert("9999", 0);
+    try tree.insert("8421", 0);
+    try tree.insert("8423", 0);
+    try tree.insert("0011", 0);
+    try tree.insert("3011", 0);
+    var it = try tree.iterator();
+    defer it.deinit();
+    try it.seek("8422");
+    const expected =
+        \\8423 - 0
+        \\9999 - 0
+        \\
+    ;
+    try expectIteratorEqual(&it, expected);
+}
