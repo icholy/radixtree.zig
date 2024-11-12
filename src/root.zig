@@ -466,13 +466,22 @@ test "RadixTree.fuzz" {
     try std.testing.fuzz(global.testOne, .{});
 }
 
+fn expectIteratorEqual(tree: *RadixTree(i64), expected: []const u8) !void {
+    var output = std.ArrayList(u8).init(testing.allocator);
+    defer output.deinit();
+    var it = try tree.iterator();
+    defer it.deinit();
+    while (try it.next()) |entry| {
+        try output.writer().print("{s} - {d}\n", .{ entry.seq, entry.value });
+    }
+    try testing.expectEqualStrings(expected, output.items);
+}
+
 test "RadixTree.iterator: 1" {
     var tree = RadixTree(i64).init(testing.allocator);
     defer tree.deinit();
-    var it = try tree.iterator();
-    defer it.deinit();
-    const value = try it.next();
-    try testing.expectEqual(null, value);
+    const expected = "";
+    try expectIteratorEqual(&tree, expected);
 }
 
 test "RadixTree.iterator: 2" {
@@ -481,11 +490,11 @@ test "RadixTree.iterator: 2" {
     try tree.insert("foo", 1);
     var it = try tree.iterator();
     defer it.deinit();
-    const Entry = RadixTree(i64).Iterator.IteratorEntry;
-    const entry = try it.next();
-    try testing.expectEqualDeep(Entry{ .seq = "foo", .value = 1 }, entry);
-    const entry2 = try it.next();
-    try testing.expectEqual(null, entry2);
+    const expected =
+        \\foo - 1
+        \\
+    ;
+    try expectIteratorEqual(&tree, expected);
 }
 
 test "RadixTree.iterator: 3" {
@@ -493,13 +502,10 @@ test "RadixTree.iterator: 3" {
     defer tree.deinit();
     try tree.insert("foo", 1);
     try tree.insert("foobar", 2);
-    var it = try tree.iterator();
-    defer it.deinit();
-    const Entry = RadixTree(i64).Iterator.IteratorEntry;
-    const entry = try it.next();
-    try testing.expectEqualDeep(Entry{ .seq = "foo", .value = 1 }, entry);
-    const entry2 = try it.next();
-    try testing.expectEqualDeep(Entry{ .seq = "foobar", .value = 2 }, entry2);
-    const entry3 = try it.next();
-    try testing.expectEqual(null, entry3);
+    const expected =
+        \\foo - 1
+        \\foobar - 2
+        \\
+    ;
+    try expectIteratorEqual(&tree, expected);
 }
