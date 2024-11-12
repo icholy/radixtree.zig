@@ -152,6 +152,31 @@ pub fn RadixTree(comptime T: type) type {
             }
         };
 
+        pub const Iterator = struct {
+            const IteratorNode = struct {
+                node: Node,
+                index: usize = 0,
+            };
+
+            stack: std.ArrayList(IteratorNode),
+
+            pub fn init(allocator: std.mem.Allocator, root: ?Node) Iterator {
+                const it = Iterator{ .stack = std.ArrayList(IteratorNode).init(allocator) };
+                if (root) |node| {
+                    try it.stack.append(.{ .node = node });
+                }
+                return it;
+            }
+
+            pub fn deinit(self: Iterator) void {
+                self.stack.deinit();
+            }
+
+            pub fn next() !?T {
+                return null;
+            }
+        };
+
         allocator: std.mem.Allocator,
         root: ?Node,
 
@@ -205,6 +230,10 @@ pub fn RadixTree(comptime T: type) type {
                 return node.lookup(seq);
             }
             return null;
+        }
+
+        fn iterator(self: *RadixTree(i64)) !Iterator {
+            return Iterator.init(self.allocator, self.root);
         }
     };
 }
