@@ -163,14 +163,14 @@ pub fn RadixTree(comptime T: type) type {
                 value: T,
             };
 
-            seq: []const u8,
+            seq: std.ArrayList(u8),
             stack: std.ArrayList(IteratorNode),
             allocator: std.mem.Allocator,
 
             pub fn init(allocator: std.mem.Allocator, root: ?Node) !Iterator {
                 var it = Iterator{
                     .stack = std.ArrayList(IteratorNode).init(allocator),
-                    .seq = "",
+                    .seq = std.ArrayList(u8).init(allocator),
                     .allocator = allocator,
                 };
                 if (root) |node| {
@@ -181,6 +181,15 @@ pub fn RadixTree(comptime T: type) type {
 
             pub fn deinit(self: Iterator) void {
                 self.stack.deinit();
+                self.seq.deinit();
+            }
+
+            fn buildSeq(self: *Iterator) ![]const u8 {
+                self.seq.clearRetainingCapacity();
+                for (self.stack.items) |entry| {
+                    try self.seq.appendSlice(entry.node.seq);
+                }
+                return self.seq.items;
             }
 
             pub fn next(self: *Iterator) !?IteratorEntry {
@@ -189,7 +198,7 @@ pub fn RadixTree(comptime T: type) type {
                     if (top.index == 257) {
                         top.index = 0;
                         if (top.node.value) |value| {
-                            return .{ .seq = top.node.seq, .value = value };
+                            return .{ .seq = try self.buildSeq(), .value = value };
                         }
                     }
                     if (top.index >= top.node.children.entries.items.len) {
