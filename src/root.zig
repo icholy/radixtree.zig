@@ -164,6 +164,7 @@ pub fn RadixTree(comptime T: type) type {
                 value: T,
             };
 
+            root: ?Node,
             seq: std.ArrayList(u8),
             stack: std.ArrayList(IteratorNode),
             allocator: std.mem.Allocator,
@@ -173,6 +174,7 @@ pub fn RadixTree(comptime T: type) type {
                     .stack = std.ArrayList(IteratorNode).init(allocator),
                     .seq = std.ArrayList(u8).init(allocator),
                     .allocator = allocator,
+                    .root = root,
                 };
                 if (root) |node| {
                     try it.push(node);
@@ -219,8 +221,10 @@ pub fn RadixTree(comptime T: type) type {
             }
 
             pub fn seek(self: *Iterator, prefix: []const u8) !void {
-                if (prefix.len == 0 or self.stack.items.len != 1) {
-                    return;
+                self.seq.clearRetainingCapacity();
+                self.stack.clearRetainingCapacity();
+                if (self.root) |node| {
+                    try self.push(node);
                 }
                 var remaining = prefix;
                 while (self.stack.items.len > 0) {
@@ -636,5 +640,25 @@ test "RadixTree.iterator.seek: 4" {
     defer it.deinit();
     try it.seek("124");
     const expected = "";
+    try expectIteratorEqual(&it, expected);
+}
+
+test "RadixTree.iterator.seek: 5" {
+    var tree = RadixTree(i64).init(testing.allocator);
+    defer tree.deinit();
+    try tree.insert("a", 0);
+    try tree.insert("b", 0);
+    try tree.insert("c", 0);
+    var it = try tree.iterator();
+    defer it.deinit();
+    try it.seek("");
+    const expected =
+        \\a - 0
+        \\b - 0
+        \\c - 0
+        \\
+    ;
+    try expectIteratorEqual(&it, expected);
+    try it.seek("");
     try expectIteratorEqual(&it, expected);
 }
