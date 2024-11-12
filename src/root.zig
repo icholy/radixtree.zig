@@ -184,21 +184,23 @@ pub fn RadixTree(comptime T: type) type {
             }
 
             pub fn next(self: *Iterator) !?IteratorEntry {
-                if (self.stack.items.len == 0) {
-                    return null;
-                }
-                const top = &self.stack.items[self.stack.items.len - 1];
-                if (top.index == 257) {
-                    top.index = 0;
-                    if (top.node.value) |value| {
-                        return .{ .seq = top.node.seq, .value = value };
+                while (self.stack.items.len > 0) {
+                    const top = &self.stack.items[self.stack.items.len - 1];
+                    if (top.index == 257) {
+                        top.index = 0;
+                        if (top.node.value) |value| {
+                            return .{ .seq = top.node.seq, .value = value };
+                        }
                     }
+                    if (top.node.children.entries.items.len >= top.index) {
+                        _ = self.stack.pop();
+                        return null;
+                    }
+                    const child = top.node.children.entries.items[top.index].value;
+                    try self.stack.append(.{ .node = child, .index = 257 });
+                    top.index += 1;
                 }
-                if (top.node.children.entries.items.len >= top.index) {
-                    _ = self.stack.pop();
-                    return null;
-                }
-                return error.NotImplemented;
+                return null;
             }
         };
 
