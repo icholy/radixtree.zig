@@ -513,11 +513,17 @@ test "RadixTree.iterator: 3" {
 test "RadixTree.iterator: 4" {
     var tree = RadixTree(i64).init(testing.allocator);
     defer tree.deinit();
+    try tree.insert("boobar", 0);
     try tree.insert("b", 2);
+    try tree.insert("bof", 6);
     try tree.insert("f", 3);
+    try tree.insert("fizz", 1);
     const expected =
         \\b - 2
+        \\bof - 6
+        \\boobar - 0
         \\f - 3
+        \\fizz - 1
         \\
     ;
     try expectIteratorEqual(&tree, expected);
