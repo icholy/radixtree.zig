@@ -40,7 +40,13 @@ pub fn RadixTree(comptime T: type) type {
                 };
                 // case: the current node is a parent of the new seq.
                 if (i == self.seq.len) {
-                    try self.insertChild(allocator, seq[i..], value);
+                    if (self.children.getPtr(seq[i])) |node| {
+                        try node.insert(allocator, seq[i..], value);
+                    } else {
+                        var node = try Node.init(allocator, seq[i..], value);
+                        errdefer node.deinit(allocator);
+                        _ = try self.children.put(seq[i], node);
+                    }
                     return;
                 }
                 // case: the new seq is a parent of the current node.
@@ -62,16 +68,6 @@ pub fn RadixTree(comptime T: type) type {
                 self.* = try Node.init(allocator, seq[0..i], null);
                 _ = try self.children.put(new.seq[0], new);
                 _ = try self.children.put(prev.seq[0], prev);
-            }
-
-            fn insertChild(self: *Node, allocator: std.mem.Allocator, seq: []const u8, value: T) InsertErrors!void {
-                if (self.children.getPtr(seq[0])) |node| {
-                    try node.insert(allocator, seq, value);
-                } else {
-                    var node = try Node.init(allocator, seq, value);
-                    errdefer node.deinit(allocator);
-                    _ = try self.children.put(seq[0], node);
-                }
             }
 
             fn lookup(self: *Node, seq: []const u8) ?T {
