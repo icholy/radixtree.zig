@@ -231,21 +231,25 @@ pub fn RadixTree(comptime T: type) type {
                         return;
                     };
                     if (diff == prefix.len) {
-                        // case: node seq has prefix.
+                        // case: node seq matches prefix.
                         return;
                     }
-                    if (diff == node.seq.len) {
-                        // case: node matches, but there's more prefix remaining.
-                        remaining = remaining[diff..];
-                        const index = node.children.search(remaining[0]);
-                        if (!index.exists) {
-                            return error.NotImplemented;
-                        }
-                        entry.next = index.value + 1;
-                        try self.push(node.children.at(index.value));
-                        continue;
+                    if (diff < node.seq.len) {
+                        // case: node seq does not match prefix.
+                        self.pop();
+                        return;
                     }
-                    return error.NotImplemented;
+                    // case: node matches, but there's more prefix remaining.
+                    remaining = remaining[diff..];
+                    const index = node.children.search(remaining[0]);
+                    entry.next = index.value + 1;
+                    if (!index.exists) {
+                        if (entry.next >= node.children.count()) {
+                            self.pop();
+                        }
+                        return;
+                    }
+                    try self.push(node.children.at(index.value));
                 }
             }
         };
