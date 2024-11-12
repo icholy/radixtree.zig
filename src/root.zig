@@ -1,6 +1,23 @@
 const std = @import("std");
 const testing = std.testing;
 
+fn SortedByteMap(comptime T: type) type {
+    const Entry = struct {
+        key: u8,
+        value: T,
+    };
+
+    return struct {
+        entries: std.ArrayList(Entry),
+
+        fn init(allocator: std.mem.Allocator) SortedByteMap(T) {
+            return .{
+                .entries = std.ArrayList(T).init(allocator),
+            };
+        }
+    };
+}
+
 pub fn RadixTree(comptime T: type) type {
     return struct {
         const ChildrenMap = std.AutoHashMap(u8, Node);
@@ -400,4 +417,8 @@ test "RadixTree(i64).fuzz" {
         }
     };
     try std.testing.fuzz(global.testOne, .{});
+}
+
+test "SortedByteMap.put: 1" {
+    return error.SkipZigTest;
 }
