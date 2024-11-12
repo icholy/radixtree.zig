@@ -262,26 +262,26 @@ pub fn RadixTree(comptime T: type) type {
         allocator: std.mem.Allocator,
         root: ?Node,
 
-        fn init(allocator: std.mem.Allocator) RadixTree(i64) {
+        fn init(allocator: std.mem.Allocator) RadixTree(T) {
             return .{
                 .allocator = allocator,
                 .root = null,
             };
         }
 
-        fn deinit(self: *RadixTree(i64)) void {
+        fn deinit(self: *RadixTree(T)) void {
             if (self.root) |*node| {
                 node.deinit(self.allocator);
             }
         }
 
-        fn write(self: *RadixTree(i64), w: std.io.AnyWriter) !void {
+        fn write(self: *RadixTree(T), w: std.io.AnyWriter) !void {
             if (self.root) |*node| {
                 try node.write(w, 0);
             }
         }
 
-        fn insert(self: *RadixTree(i64), seq: []const u8, value: T) InsertErrors!void {
+        fn insert(self: *RadixTree(T), seq: []const u8, value: T) InsertErrors!void {
             if (seq.len == 0) {
                 return;
             }
@@ -292,7 +292,7 @@ pub fn RadixTree(comptime T: type) type {
             }
         }
 
-        fn remove(self: *RadixTree(i64), seq: []const u8) !?T {
+        fn remove(self: *RadixTree(T), seq: []const u8) !?T {
             if (seq.len == 0) {
                 return null;
             }
@@ -307,14 +307,14 @@ pub fn RadixTree(comptime T: type) type {
             return null;
         }
 
-        fn lookup(self: *RadixTree(i64), seq: []const u8) ?T {
+        fn lookup(self: *RadixTree(T), seq: []const u8) ?T {
             if (self.root) |*node| {
                 return node.lookup(seq);
             }
             return null;
         }
 
-        fn iterator(self: *RadixTree(i64)) !Iterator {
+        fn iterator(self: *RadixTree(T)) !Iterator {
             return Iterator.init(self.allocator, self.root);
         }
     };
