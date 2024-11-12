@@ -23,16 +23,28 @@ fn SortedByteMap(comptime T: type) type {
         }
 
         fn get(self: *Self, key: u8) ?T {
-            const S = struct {
-                fn compare(needle: u8, entry: Entry) std.math.Order {
-                    return std.math.order(needle, entry.key);
-                }
-            };
-            const index = std.sort.binarySearch(Entry, self.entries.items, key, S.compare);
+            const index = self.search(key, true);
             if (index) |i| {
                 return self.entries.items[i].value;
             }
             return null;
+        }
+
+        fn search(self: Self, key: u8, exact: bool) ?usize {
+            const items = self.entries.items;
+            var low: usize = 0;
+            var high: usize = items.len;
+
+            while (low < high) {
+                // Avoid overflowing in the midpoint calculation
+                const mid = low + (high - low) / 2;
+                switch (std.math.order(key, items[mid].key)) {
+                    .eq => return mid,
+                    .gt => low = mid + 1,
+                    .lt => high = mid,
+                }
+            }
+            return if (exact) null else low;
         }
     };
 }
