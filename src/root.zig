@@ -205,7 +205,7 @@ pub fn RadixTree(comptime T: type) type {
                     }
                     if (top.index >= top.node.children.count()) {
                         self.pop();
-                        return null;
+                        continue;
                     }
                     try self.push(top.node.children.at(top.index));
                     top.index += 1;
