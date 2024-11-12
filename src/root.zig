@@ -152,7 +152,7 @@ pub fn RadixTree(comptime T: type) type {
 
             // we use this sentinel to signal that a node
             // should use its itself as the next iterator value.
-            const SELF = 257;
+            const SELF = std.math.maxInt(usize);
 
             const IteratorNode = struct {
                 node: Node,
