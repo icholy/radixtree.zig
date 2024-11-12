@@ -150,14 +150,13 @@ pub fn RadixTree(comptime T: type) type {
 
         pub const Iterator = struct {
 
-            // we use this a sentinel value to signal that a node
-            // has not been used yet. Since the children are all bytes
-            // there will never be more than 256 of them.
-            const UNUSED = 257;
+            // we use this sentinel to signal that a node
+            // should use its itself as the next iterator value.
+            const SELF = 257;
 
             const IteratorNode = struct {
                 node: Node,
-                index: usize = UNUSED,
+                next: usize = SELF,
             };
 
             const IteratorEntry = struct {
@@ -198,19 +197,19 @@ pub fn RadixTree(comptime T: type) type {
 
             pub fn next(self: *Iterator) !?IteratorEntry {
                 while (self.stack.items.len > 0) {
-                    const top = &self.stack.items[self.stack.items.len - 1];
-                    if (top.index == UNUSED) {
-                        top.index = 0;
-                        if (top.node.value) |value| {
+                    const entry = &self.stack.items[self.stack.items.len - 1];
+                    if (entry.next == SELF) {
+                        entry.next = 0;
+                        if (entry.node.value) |value| {
                             return .{ .seq = self.seq.items, .value = value };
                         }
                     }
-                    if (top.index >= top.node.children.count()) {
+                    if (entry.next >= entry.node.children.count()) {
                         self.pop();
                         continue;
                     }
-                    try self.push(top.node.children.at(top.index));
-                    top.index += 1;
+                    try self.push(entry.node.children.at(entry.next));
+                    entry.next += 1;
                 }
                 return null;
             }
@@ -221,7 +220,7 @@ pub fn RadixTree(comptime T: type) type {
                 }
                 while (try self.next()) |entry| {
                     if (std.mem.startsWith(u8, entry.seq, prefix)) {
-                        self.stack.items[self.stack.items.len - 1].index = UNUSED;
+                        self.stack.items[self.stack.items.len - 1].next = SELF;
                         return;
                     }
                 }
